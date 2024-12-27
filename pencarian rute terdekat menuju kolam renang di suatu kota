@@ -1,0 +1,124 @@
+import time
+import matplotlib.pyplot as plt
+import heapq
+
+# Representasi graf dalam bentuk adjacency list dengan bobot yang meningkat
+graf = {
+    'A': {'B': 5, 'C': 10},
+    'B': {'A': 5, 'C': 2, 'D': 3},
+    'C': {'A': 10, 'B': 2, 'D': 4},
+    'D': {'B': 3, 'C': 4, 'E': 1},
+    'E': {'D': 1}
+}
+
+# Fungsi untuk algoritma Dijkstra iteratif
+def dijkstra_iteratif(graf, start, tujuan):
+    jarak = {node: float('inf') for node in graf}
+    jarak[start] = 0
+    pq = [(0, start)]  # Priority queue
+    visited = set()
+
+    while pq:
+        current_distance, current_node = heapq.heappop(pq)
+
+        if current_node in visited:
+            continue
+
+        visited.add(current_node)
+
+        for neighbor, weight in graf[current_node].items():
+            if neighbor in visited:
+                continue
+
+            new_distance = current_distance + weight
+            if new_distance < jarak[neighbor]:
+                jarak[neighbor] = new_distance
+                heapq.heappush(pq, (new_distance, neighbor))
+
+    return jarak[tujuan]
+
+# Fungsi untuk algoritma Dijkstra rekursif
+def dijkstra_rekursif(graf, start, tujuan, jarak=None, visited=None):
+    if jarak is None:
+        jarak = {node: float('inf') for node in graf}
+        jarak[start] = 0
+    if visited is None:
+        visited = set()
+
+    # Basis rekursi: jika semua simpul telah dikunjungi
+    if len(visited) == len(graf):
+        return jarak[tujuan]
+
+    min_node = None
+    min_distance = float('inf')
+
+    # Mencari node dengan jarak terpendek yang belum dikunjungi
+    for node in graf:
+        if node not in visited and jarak[node] < min_distance:
+            min_node = node
+            min_distance = jarak[node]
+
+    # Kunjungi node yang ditemukan
+    visited.add(min_node)
+
+    # Update jarak untuk tetangga
+    for neighbor, weight in graf[min_node].items():
+        if neighbor not in visited:
+            new_distance = jarak[min_node] + weight
+            if new_distance < jarak[neighbor]:
+                jarak[neighbor] = new_distance
+
+    # Panggil rekursi lagi
+    return dijkstra_rekursif(graf, start, tujuan, jarak, visited)
+
+# Fungsi untuk mengukur waktu eksekusi
+def ukur_waktu(start, tujuan):
+    # Mengukur waktu eksekusi Dijkstra Iteratif
+    start_time = time.time()
+    dijkstra_iteratif(graf, start, tujuan)
+    iteratif_time = time.time() - start_time
+
+    # Mengukur waktu eksekusi Dijkstra Rekursif
+    start_time = time.time()
+    dijkstra_rekursif(graf, start, tujuan)
+    rekursif_time = time.time() - start_time
+
+    return iteratif_time, rekursif_time
+
+# Fungsi untuk menampilkan tabel waktu eksekusi dan grafik perbandingan
+def tampilkan_tabel_dan_grafik():
+    start = input("Masukkan lokasi awal: ")
+    tujuan = input("Masukkan lokasi tujuan: ")
+
+    # Data untuk tabel
+    ukuran_input = [1, 10, 20, 50, 100, 200, 500, 1000]  # Ukuran masukan yang berbeda
+    iteratif_times = []
+    rekursif_times = []
+
+    print("\nTabel Perbandingan Waktu Eksekusi Dijkstra (Iteratif vs Rekursif)")
+    print("Ukuran Masukan | Waktu Iteratif (detik) | Waktu Rekursif (detik)")
+
+    for n in ukuran_input:
+        # Simulasikan graf dengan ukuran yang berbeda (menambahkan lebih banyak node dan edge)
+        nodes = list(graf.keys())[:n]
+        subgraf = {node: graf[node] for node in nodes if node in graf}
+
+        iteratif_time, rekursif_time = ukur_waktu(start, tujuan)
+        iteratif_times.append(iteratif_time)
+        rekursif_times.append(rekursif_time)
+
+        print(f"{n:<15} | {iteratif_time:<20} | {rekursif_time:<20}")
+
+    # Plotting the comparison graph
+    plt.figure(figsize=(10, 6))
+    plt.plot(ukuran_input, iteratif_times, label='Iteratif', color='blue', marker='o')
+    plt.plot(ukuran_input, rekursif_times, label='Rekursif', color='red', marker='x')
+    plt.xlabel('Ukuran Masukan')
+    plt.ylabel('Waktu Eksekusi (detik)')
+    plt.title('Perbandingan Waktu Eksekusi Dijkstra (Iteratif vs Rekursif)')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+# Menampilkan tabel dan grafik
+tampilkan_tabel_dan_grafik()
